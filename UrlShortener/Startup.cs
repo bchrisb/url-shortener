@@ -14,7 +14,7 @@ namespace UrlShortener
     {
         public override void Configure(IFunctionsHostBuilder builder)
         {
-            builder.Services.AddSingleton<ICodeGenerator, CodeGenerator>();
+            builder.Services.AddSingleton<CodeGenerator, CodeGenerator>();
             builder.Services.AddSingleton<ITableStorageRepository<UrlCodeTableEntity>, TableStorageRepository<UrlCodeTableEntity>>(sp => GetTableStorageRepository<UrlCodeTableEntity>("UrlCodes"));
         }
 

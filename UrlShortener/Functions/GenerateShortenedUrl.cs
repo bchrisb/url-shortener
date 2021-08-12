@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Web.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -18,6 +19,8 @@ namespace UrlShortener.Functions
         private readonly ICodeGenerator _codeGenerator;
         private readonly ITableStorageRepository<UrlCodeTableEntity> _tableStorageRepository;
 
+        private const int CodeLength = 8;
+
         public GenerateShortenedUrl(ICodeGenerator codeGenerator, ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository)
         {
             _codeGenerator = codeGenerator;
@@ -29,19 +32,33 @@ namespace UrlShortener.Functions
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "shorten")] HttpRequest req,
             ILogger log)
         {
-            var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-
-            var shortenUrlRequest = JsonConvert.DeserializeObject<UrlShortenRequest>(requestBody);
-
-            var code = await TryInsert(shortenUrlRequest.Url);
-
-            var shortenedUrl = $"{req.Scheme}://{req.Host}/{code}";
-
-            return new OkObjectResult(new UrlShortenResponse
+            try
             {
-                ShortUrl = shortenedUrl,
-                Code = code
-            });
+                log.LogInformation($"{nameof(GenerateShortenedUrl)} starting");
+
+                var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
+                var shortenUrlRequest = JsonConvert.DeserializeObject<UrlShortenRequest>(requestBody);
+
+                var code = await TryInsert(shortenUrlRequest.Url);
+
+                var shortenedUrl = $"{req.Scheme}://{req.Host}/{code}";
+
+                return new OkObjectResult(new UrlShortenResponse
+                {
+                    ShortUrl = shortenedUrl,
+                    Code = code
+                });
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"Something went wrong. Exception message: {ex.Message}");
+                return new InternalServerErrorResult();
+            }
+            finally
+            {
+                log.LogInformation($"{nameof(GenerateShortenedUrl)} finished");
+            }
         }
 
         private async Task<string> TryInsert(string fullUrl)
@@ -53,7 +70,7 @@ namespace UrlShortener.Functions
             {
                 try
                 {
-                    code = _codeGenerator.Generate();
+                    code = _codeGenerator.Generate(CodeLength);
 
                     var entity = new UrlCodeTableEntity
                     {

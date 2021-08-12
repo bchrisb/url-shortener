@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -14,9 +15,9 @@ namespace UrlShortener.Functions
     public class RedirectToFullUrl
     {
         private readonly ITableStorageRepository<UrlCodeTableEntity> _tableStorageRepository;
-        private readonly ICodeGenerator _codeGenerator;
+        private readonly CodeGenerator _codeGenerator;
 
-        public RedirectToFullUrl(ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository, ICodeGenerator codeGenerator)
+        public RedirectToFullUrl(ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository, CodeGenerator codeGenerator)
         {
             _tableStorageRepository = tableStorageRepository;
             _codeGenerator = codeGenerator;
@@ -29,7 +30,7 @@ namespace UrlShortener.Functions
         {
             try
             {
-                log.LogInformation($"Start processing code: {code}");
+                log.LogInformation($"Start {nameof(RedirectToFullUrl)}");
                 
                 var entity = await _tableStorageRepository.GetAsync(_codeGenerator.GetShortCode(code), code);
 
@@ -38,17 +39,19 @@ namespace UrlShortener.Functions
                     log.LogInformation($"No entity found for code: {code}");
                     return new NotFoundObjectResult(new {message = "No record found"});
                 }
-                
+
+                log.LogInformation($"Redirecting to: {entity.FullUrl} for code: {code}");
+
                 return new RedirectResult(entity.FullUrl);
             }
             catch (Exception ex)
             {
                 log.LogError(ex, $"Something went wrong. Exception message: {ex.Message}");
-                throw;
+                return new InternalServerErrorResult();
             }
             finally
             {
-                log.LogInformation($"Finished processing code: {code}");
+                log.LogInformation($"Finish {nameof(RedirectToFullUrl)}");
             }
         }
     }
