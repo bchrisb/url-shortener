@@ -20,7 +20,7 @@ namespace UrlShortener
 
         private static TableStorageRepository<T> GetTableStorageRepository<T>(string tableName) where T : ITableEntity, new()
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse("UseDevelopmentStorage=true");
+            var cloudStorageAccount = CloudStorageAccount.Parse("UseDevelopmentStorage=true"); // TODO: make a setting
             var cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
             var tableRepo = new TableStorageRepository<T>(cloudTableClient, tableName);
             return tableRepo;
