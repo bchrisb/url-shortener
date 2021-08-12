@@ -34,7 +34,7 @@ namespace UrlShortener.Functions
         {
             try
             {
-                log.LogInformation($"{nameof(GenerateShortenedUrl)} starting");
+                log.LogInformation($"{nameof(GenerateShortenedUrl)} started");
 
                 var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 

@@ -15,9 +15,9 @@ namespace UrlShortener.Functions
     public class RedirectToFullUrl
     {
         private readonly ITableStorageRepository<UrlCodeTableEntity> _tableStorageRepository;
-        private readonly CodeGenerator _codeGenerator;
+        private readonly ICodeGenerator _codeGenerator;
 
-        public RedirectToFullUrl(ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository, CodeGenerator codeGenerator)
+        public RedirectToFullUrl(ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository, ICodeGenerator codeGenerator)
         {
             _tableStorageRepository = tableStorageRepository;
             _codeGenerator = codeGenerator;
@@ -30,14 +30,14 @@ namespace UrlShortener.Functions
         {
             try
             {
-                log.LogInformation($"Start {nameof(RedirectToFullUrl)}");
-                
+                log.LogInformation($"{nameof(RedirectToFullUrl)} started");
+
                 var entity = await _tableStorageRepository.GetAsync(_codeGenerator.GetShortCode(code), code);
 
                 if (entity == null)
                 {
                     log.LogInformation($"No entity found for code: {code}");
-                    return new NotFoundObjectResult(new {message = "No record found"});
+                    return new NotFoundObjectResult(new { message = "No record found" });
                 }
 
                 log.LogInformation($"Redirecting to: {entity.FullUrl} for code: {code}");
@@ -51,7 +51,7 @@ namespace UrlShortener.Functions
             }
             finally
             {
-                log.LogInformation($"Finish {nameof(RedirectToFullUrl)}");
+                log.LogInformation($"{nameof(RedirectToFullUrl)} finished");
             }
         }
     }

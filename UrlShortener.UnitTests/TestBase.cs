@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using Moq;
 using Newtonsoft.Json;
@@ -12,6 +12,8 @@ namespace UrlShortener.UnitTests
 {
     public class TestBase
     {
+        protected readonly Mock<ILogger> _mockLogger = new Mock<ILogger>();
+
         private MemoryStream _memoryStream;
 
         protected HttpRequest CreateMockRequest(
