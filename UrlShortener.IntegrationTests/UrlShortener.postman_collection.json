@@ -1,0 +1,206 @@
+{
+	"info": {
+		"_postman_id": "7a8ca9d2-b43c-4ab4-83b5-009d1ead241e",
+		"name": "UrlShortener",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Errors",
+			"item": [
+				{
+					"name": "[Bad request] Generate shortened URL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const schema = {\r",
+									"    \"type\": \"object\",\r",
+									"    \"properties\": {\r",
+									"        \"message\": { \"type\": \"string\" }\r",
+									"    }\r",
+									"};\r",
+									"\r",
+									"var response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 400\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Validate schema\", () => {\r",
+									"    pm.response.to.have.jsonSchema(schema);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Message should be 'Invalid URL. Unable to shorten'\", () => {\r",
+									"    pm.expect(response.message).to.be.equal(\"Invalid URL. Unable to shorten\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"url\": \"www.google\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{UrlShortenerBaseUrl}}/shorten",
+							"host": [
+								"{{UrlShortenerBaseUrl}}"
+							],
+							"path": [
+								"shorten"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[Not found] Go to full URL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const schema = {\r",
+									"    \"type\": \"object\",\r",
+									"    \"properties\": {\r",
+									"        \"message\": { \"type\": \"string\" }\r",
+									"    }\r",
+									"};\r",
+									"\r",
+									"var response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code is 404\", function () {\r",
+									"    pm.response.to.have.status(404);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Message is 'No record found'\", function () {\r",
+									"    pm.expect(response.message).to.be.equal(\"No record found\");\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{UrlShortenerBaseUrl}}/foo",
+							"host": [
+								"{{UrlShortenerBaseUrl}}"
+							],
+							"path": [
+								"foo"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Generate shortened URL",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const schema = {\r",
+							"    \"type\": \"object\",\r",
+							"    \"properties\": {\r",
+							"        \"shortUrl\": { \"type\": \"string\" },\r",
+							"        \"code\": { \"type\": \"string\" }\r",
+							"    }\r",
+							"};\r",
+							"\r",
+							"var response = pm.response.json();\r",
+							"\r",
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Validate schema\", () => {\r",
+							"    pm.response.to.have.jsonSchema(schema);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Short url should contain code\", () => {\r",
+							"    var shortUrl = response.shortUrl;\r",
+							"    var code = response.code;\r",
+							"    pm.expect(shortUrl).to.be.equal(`${pm.environment.get(\"UrlShortenerBaseUrl\")}/${code}`);\r",
+							"});\r",
+							"\r",
+							"pm.environment.set(\"Code\", response.code);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"url\": \"https://blog.payroc.com/payroc-launches-pay-by-phone-payment-processing\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{UrlShortenerBaseUrl}}/shorten",
+					"host": [
+						"{{UrlShortenerBaseUrl}}"
+					],
+					"path": [
+						"shorten"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Go to full URL",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{UrlShortenerBaseUrl}}/{{Code}}",
+					"host": [
+						"{{UrlShortenerBaseUrl}}"
+					],
+					"path": [
+						"{{Code}}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
