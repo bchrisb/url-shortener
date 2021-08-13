@@ -1,1 +1,3 @@
-# url-shortener
+# URL Shortener
+
+Shortens long URLs!
