@@ -25,7 +25,7 @@ namespace UrlShortener.Functions
 
         [FunctionName(nameof(RedirectToFullUrl))]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "{code}")] HttpRequest req, string code,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "{code}")] HttpRequest req, string code,
             ILogger log)
         {
             try

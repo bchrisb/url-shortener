@@ -28,7 +28,7 @@ namespace UrlShortener.Functions
 
         [FunctionName(nameof(GenerateShortenedUrl))]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "shorten")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "shorten")] HttpRequest req,
             ILogger log)
         {
             try
