@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using UrlShortener.Models.Dto;
 using UrlShortener.Models.Entities;
@@ -18,8 +19,6 @@ namespace UrlShortener.Functions
     {
         private readonly ICodeGenerator _codeGenerator;
         private readonly ITableStorageRepository<UrlCodeTableEntity> _tableStorageRepository;
-
-        private const int CodeLength = 8;
 
         public GenerateShortenedUrl(ICodeGenerator codeGenerator, ITableStorageRepository<UrlCodeTableEntity> tableStorageRepository)
         {
@@ -40,13 +39,21 @@ namespace UrlShortener.Functions
 
                 var shortenUrlRequest = JsonConvert.DeserializeObject<UrlShortenRequest>(requestBody);
 
-                var code = await TryInsert(shortenUrlRequest.Url);
+                if (!Uri.TryCreate(shortenUrlRequest.Url, UriKind.Absolute, out var fullUrl))
+                {
+                    log.LogWarning("Request contained an invalid URL. Unable to shorten.");
+                    return new BadRequestObjectResult(new ErrorResponse("Invalid URL. Unable to shorten"));
+                }
 
-                var shortenedUrl = $"{req.Scheme}://{req.Host}/{code}";
+                var code = await TryInsert(shortenUrlRequest.Url, log);
+
+                var shortUrl = $"{req.Scheme}://{req.Host}/{code}";
+
+                log.LogInformation($"Short URL: {shortUrl}");
 
                 return new OkObjectResult(new UrlShortenResponse
                 {
-                    ShortUrl = shortenedUrl,
+                    ShortUrl = shortUrl,
                     Code = code
                 });
             }
@@ -61,16 +68,16 @@ namespace UrlShortener.Functions
             }
         }
 
-        private async Task<string> TryInsert(string fullUrl)
+        private async Task<string> TryInsert(string fullUrl, ILogger log)
         {
-            bool uniqueCode;
+            var uniqueCode = false;
             string code = null;
 
             do
             {
                 try
                 {
-                    code = _codeGenerator.Generate(CodeLength);
+                    code = _codeGenerator.Generate();
 
                     var entity = new UrlCodeTableEntity
                     {
@@ -81,11 +88,16 @@ namespace UrlShortener.Functions
 
                     await _tableStorageRepository.InsertAsync(entity);
 
+                    log.LogInformation($"Successfully created entity: {entity.ToString()}");
+
                     uniqueCode = true;
                 }
-                catch (Exception)
+                catch (StorageException ex)
                 {
-                    uniqueCode = false;
+                    if (ex.Message == "Conflict")
+                    {
+                        log.LogWarning("Code has been generated before and is present in table");
+                    }
                 }
             } while (!uniqueCode);
 

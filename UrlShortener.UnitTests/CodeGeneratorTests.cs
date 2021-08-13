@@ -8,16 +8,16 @@ namespace UrlShortener.UnitTests
         private readonly CodeGenerator _codeGenerator = new CodeGenerator();
 
         [TestMethod]
-        public void GivenALength_WhenGenerate_ThenCodeOfGivenLengthGenerated()
+        public void WhenGenerate_ThenCodeGenerated()
         {
             // arrange
-            const int length = 8;
+            const int expectedLength = 8;
 
             // act
-            var code = _codeGenerator.Generate(8);
+            var code = _codeGenerator.Generate();
 
             // assert
-            Assert.IsTrue(code.Length == length, $"Expected code length {length} did not equal actual code length {code.Length}");
+            Assert.IsTrue(code.Length == expectedLength, $"Expected code length {expectedLength} did not equal actual code length {code.Length}");
         }
 
         [TestMethod]
@@ -25,12 +25,13 @@ namespace UrlShortener.UnitTests
         {
             // arrange
             const string code = "di83xj23";
+            const string expectedShortCode = "di";
 
             // act
             var shortCode = _codeGenerator.GetShortCode(code);
 
             // assert
-            Assert.AreEqual("di", shortCode, $"Expected short code \"di\" did not equal actual short code {shortCode}");
+            Assert.AreEqual(expectedShortCode, shortCode, $"Expected short code \"{expectedShortCode}\" did not equal actual short code {shortCode}");
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -20,7 +21,7 @@ namespace UrlShortener
 
         private static TableStorageRepository<T> GetTableStorageRepository<T>(string tableName) where T : ITableEntity, new()
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse("UseDevelopmentStorage=true"); // TODO: make a setting
+            var cloudStorageAccount = CloudStorageAccount.Parse(Environment.GetEnvironmentVariable("AzureWebJobsStorage"));
             var cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
             var tableRepo = new TableStorageRepository<T>(cloudTableClient, tableName);
             return tableRepo;

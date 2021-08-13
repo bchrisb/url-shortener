@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +6,7 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using UrlShortener.Models.Dto;
 using UrlShortener.Models.Entities;
 using UrlShortener.Repository;
 
@@ -32,12 +32,14 @@ namespace UrlShortener.Functions
             {
                 log.LogInformation($"{nameof(RedirectToFullUrl)} started");
 
-                var entity = await _tableStorageRepository.GetAsync(_codeGenerator.GetShortCode(code), code);
+                log.LogInformation($"Code: {code}");
+
+                var entity = await _tableStorageRepository.GetAsync(partitionKey: _codeGenerator.GetShortCode(code), rowKey: code);
 
                 if (entity == null)
                 {
                     log.LogInformation($"No entity found for code: {code}");
-                    return new NotFoundObjectResult(new { message = "No record found" });
+                    return new NotFoundObjectResult(new ErrorResponse("No record found"));
                 }
 
                 log.LogInformation($"Redirecting to: {entity.FullUrl} for code: {code}");
